@@ -7,8 +7,8 @@ from pathlib import Path
 import re
 
 RAW_DIR = Path("raw_data_rmp")
-COMMENTS_DIR = RAW_DIR / "teachers_comments"
-PROFESSOR_LIST_FILE = RAW_DIR / "professor_list.json"
+COMMENTS_DIR = RAW_DIR / "all_teachers_comments"
+PROFESSOR_LIST_FILE = RAW_DIR / "all_professors_list.json"
 ERROR_LOG = Path("error_file.csv")
 
 # HELPER FOR parsing teacherinfo from filename
