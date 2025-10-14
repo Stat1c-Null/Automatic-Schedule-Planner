@@ -1,3 +1,6 @@
+import React from 'react';
+import HoverButton from '@/components/HoverButton';
+
 export default function SchedulePage() {
   return (
     <main>
@@ -6,7 +9,7 @@ export default function SchedulePage() {
       </div>
 
       <div id="schedule-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300">
-
+        <HoverButton text="Test" />
       </div>
 
       <div id="class-selection-container" className="">
