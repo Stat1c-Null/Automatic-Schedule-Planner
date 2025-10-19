@@ -2,10 +2,11 @@ import React from "react";
 
 interface InputFieldProps {
   text: string;
-  placeholder: string;
+  placeholder?: string;
   value: string;
-  example: string;
+  example?: string;
   name: string;
+  onChange?: (value: string) => void;
 }
 
 export default function InputField({
@@ -14,12 +15,13 @@ export default function InputField({
   value,
   example,
   name,
+  onChange,
 }: InputFieldProps) {
   const inputID = `input-${name}`;
 
   return (
-    <div className="flex flex-col items-center my-4">
-      <div className="w-200">
+    <div className="flex flex-col items-center my-4 w-full">
+      <div className="w-full max-w-2xl">
         <label
           htmlFor={inputID}
           className="block text-sm font-medium text-white mb-1 text-left"
@@ -31,6 +33,7 @@ export default function InputField({
           id={inputID}
           name={name}
           value={value}
+          onChange={(e) => onChange && onChange(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 hover:bg-gray-900 hover:border-yellow-300 transition-colors duration-200 sm:text-sm text-white bg-transparent"
           placeholder={placeholder}
         />
