@@ -9,7 +9,7 @@ export default function HomePage() {
       <NavBar/>
       <h1>Home Page</h1>
       <a href="/schedule">Go to Schedule</a>
-
+      <HomePageContent/>
 
       
     </main>
