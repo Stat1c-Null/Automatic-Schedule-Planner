@@ -1,0 +1,55 @@
+program_title,course_name,catalog_id,core_id,course_id
+Computer Science B.S.,CSE 1321: Programming and Problem Solving I, 79, 79236, 128867
+Computer Science B.S.,CSE 1321L: Programming and Problem Solving I Laboratory, 79, 79236, 128858
+Computer Science B.S.,CSE 1322: Programming and Problem Solving II, 79, 79236, 128868
+Computer Science B.S.,CSE 1322L: Programming and Problem Solving II Laboratory, 79, 79236, 128859
+Computer Science B.S.,MATH 2202: Calculus II, 79, 79236, 126741
+Computer Science B.S.,MATH 2345: Discrete Mathematics, 79, 79236, 127672
+Computer Science B.S.,TCOM 2010: Technical Writing, 79, 79236, 128415
+Computer Science B.S.,CS 3305: Data Structures, 79, 79237, 127748
+Computer Science B.S.,CS 3503: Computer Organization and Architecture, 79, 79237, 128869
+Computer Science B.S.,CS 3502: Operating Systems, 79, 79237, 127827
+Computer Science B.S.,SWE 3313: Introduction to Software Engineering, 79, 79237, 127851
+Computer Science B.S.,CS 3410: Introduction to Database Systems, 79, 79237, 127609
+Computer Science B.S.,CS 4306: Algorithm Analysis, 79, 79237, 127742
+Computer Science B.S.,CS 3622: Fundamentals of Data Communications, 79, 79237, 128953
+Computer Science B.S.,CS 4504: Parallel and Distributed Computing, 79, 79237, 127725
+Computer Science B.S.,CS 4308: Concepts of Programming Languages, 79, 79237, 127608
+Computer Science B.S.,CSE 3801: Professional Practices and Ethics, 79, 79237, 127723
+Computer Science B.S.,CS 4850: Computer Science Senior Project, 79, 79237, 126161
+Computer Science B.S.,STAT 2332: Probability and Data Analysis, 79, 79237, 127402
+Computer Science B.S.,MATH 3260: Linear Algebra I, 79, 79237, 126745
+Computer Science B.S.,SWE 3633: Software Architecture and Design, 79, 79239, 127853
+Computer Science B.S.,SWE 3643: Software Testing & Quality Assurance, 79, 79239, 127854
+Computer Science B.S.,SWE 3683: Embedded Systems Analysis and Design, 79, 79239, 127855
+Computer Science B.S.,SWE 4633: Cloud Software Development, 79, 79239, 127856
+Computer Science B.S.,CSE 4983: CSE Computing Internship, 79, 79239, 128047
+Computer Science B.S.,CS 3642: Artificial Intelligence, 79, 79241, 128041
+Computer Science B.S.,CS 4267: Machine Learning, 79, 79241, 128871
+Computer Science B.S.,CS 4732: Machine Vision, 79, 79241, 128493
+Computer Science B.S.,CS 4742: Natural Language Processing, 79, 79241, 128961
+Computer Science B.S.,CS 4277: Deep Learning, 79, 79242, 128978
+Computer Science B.S.,CS 4491: Advanced Topics in Computer Science, 79, 79242, 126156
+Computer Science B.S.,CS 4492: Undergraduate Research, 79, 79242, 128976
+Computer Science B.S.,CSE 4983: CSE Computing Internship, 79, 79242, 128047
+Computer Science B.S.,CS 4265: Big Data Analytics, 79, 79244, 128870
+Computer Science B.S.,CS 4412: Data Mining, 79, 79244, 127610
+Computer Science B.S.,CS 4422: Information Retrieval, 79, 79244, 128955
+Computer Science B.S.,CS 4522: HPC & Parallel Programming, 79, 79244, 127745
+Computer Science B.S.,CS 4524: Cloud Computing, 79, 79245, 127755
+Computer Science B.S.,CS 4722: Computer Graphics and Multimedia, 79, 79245, 127741
+Computer Science B.S.,CS 4491: Advanced Topics in Computer Science, 79, 79245, 126156
+Computer Science B.S.,CS 4492: Undergraduate Research, 79, 79245, 128976
+Computer Science B.S.,CSE 4983: CSE Computing Internship, 79, 79245, 128047
+Computer Science B.S.,CS 3626: Cryptography, 79, 79247, 128954
+Computer Science B.S.,CS 4612: Software Security, 79, 79247, 127595
+Computer Science B.S.,CS 4622: Computer Networks, 79, 79247, 127758
+Computer Science B.S.,CS 4626: Computer and Network Security, 79, 79247, 128956
+Computer Science B.S.,CS 4491: Advanced Topics in Computer Science, 79, 79248, 126156
+Computer Science B.S.,CS 4492: Undergraduate Research, 79, 79248, 128976
+Computer Science B.S.,CSE 4983: CSE Computing Internship, 79, 79248, 128047
+Computer Science B.S.,IT 4823: Information Security Administration & Privacy, 79, 79248, 127768
+Computer Science B.S.,IT 4833: Wireless Security, 79, 79248, 127770
+Computer Science B.S.,IT 4843: Ethical Hacking for Effective Defense, 79, 79248, 127767
+Computer Science B.S.,IT 4853: Computer Forensics, 79, 79248, 128161
+Computer Science B.S.,IT 4883: Infrastructure Defense, 79, 79248, 127879
