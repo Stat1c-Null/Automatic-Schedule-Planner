@@ -20,6 +20,12 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  // Allow empty interface declarations when desired
+  {
+    rules: {
+      '@typescript-eslint/no-empty-object-type': ['error', { allowInterfaces: true }],
+    },
+  },
 ];
 
 export default eslintConfig;

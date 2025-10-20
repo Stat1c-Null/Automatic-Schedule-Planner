@@ -9,7 +9,7 @@ export default function HomePageContent({
 }: HomePageContentProps) {
   return (
     /*this div contains all of the content in HomePageContent, top margin to avoid NavBar overlapping*/
-    <div className="pt-6">
+    <div className="pt-6 mt-16">
     {/*creates background for content, welcome message*/}  
     <div className="mx-4 bg-gray-800 text-yellow-300 rounded-sm px-8">
       <h2 className="text-6xl" >Welcome!</h2>

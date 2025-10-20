@@ -136,7 +136,7 @@ export default function SchedulePage() {
           </div>
 
           {/* Days columns */}
-          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day, colIndex) => (
+          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
             <div key={day} className="relative border border-gray-100 bg-gray-800 text-white rounded-xs">
               <div className="h-12 flex items-center justify-center font-semibold border-b border-gray-100 bg-black">
                 {day}
@@ -184,8 +184,6 @@ export default function SchedulePage() {
       <div id="footer" className="bottom-0 w-full h-15 bg-gray-800 text-white flex items-center justify-center">
         <p className="text-sm">Developed by Group 6 CLD</p>
       </div>
-      
-      <a href="/">Go Home</a>
     </main>
   );
 }
