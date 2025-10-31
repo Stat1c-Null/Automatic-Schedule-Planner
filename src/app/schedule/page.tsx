@@ -78,14 +78,14 @@ export default function SchedulePage() {
   }
 
   return (
-    <main>
+    <main className='bg-black'>
       <NavBar/>
       {/* pad the page content so the fixed NavBar doesn't overlap it */}
       <div className="pt-16">
 
       {/* Add Event Section */}
       <div id="add-event-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
-        <h1 className="text-2xl font-bold mb-4 mt-30">Add new event to your schedule</h1>
+        <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Add new event to your schedule</h1>
         <InputField text="Event Name" placeholder="Enter the event name" value={eventName} example="e.g., Math Class" name="eventName" onChange={setEventName} />
 
         <div id="event-date-time-container" className="flex flex-col items-center justify-center gap-4 mb-6 w-full max-w-2xl">
@@ -175,7 +175,7 @@ export default function SchedulePage() {
   {/* end main padding wrapper */}
       {/* Class Selection Section */}
       <div id="class-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
-          <h1 className="text-2xl font-bold mb-4 mt-30">Available Classes</h1>
+          <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Available Classes</h1>
           <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
             
           </div>
