@@ -5,7 +5,7 @@ import HomePageContent from "@/components/HomePageContent";
 
 export default function HomePage() {
   return (
-    <main>
+    <main className='bg-black'>
       <NavBar/>
 
       <HomePageContent/>
