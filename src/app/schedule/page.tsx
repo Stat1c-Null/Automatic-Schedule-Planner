@@ -7,6 +7,7 @@ import InputField from '@/components/InputField';
 import DateTime from '@/components/DateTime';
 import HoverButtonSmall from '@/components/HoverButtonSmall';
 import CalendarEvent from '@/components/CalendarEvent';
+import WantedClassListItem from '@/components/WantedClassListItem';
 
 export default function SchedulePage() {
   const [eventName, setEventName] = useState("");
@@ -175,7 +176,7 @@ export default function SchedulePage() {
   {/* end main padding wrapper */}
       {/* Class Selection Section */}
       <div id="class-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
-          <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Available Classes</h1>
+          <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Next semester classes</h1>
           <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
             
           </div>
