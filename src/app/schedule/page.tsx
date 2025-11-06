@@ -8,6 +8,7 @@ import DateTime from '@/components/DateTime';
 import HoverButtonSmall from '@/components/HoverButtonSmall';
 import CalendarEvent from '@/components/CalendarEvent';
 import WantedClassListItem from '@/components/WantedClassListItem';
+import Footer from '@/components/Footer';
 
 export default function SchedulePage() {
   const [eventName, setEventName] = useState("");
@@ -96,6 +97,11 @@ export default function SchedulePage() {
     setClassName('');
     setClassType('');
     setClassLocation('');
+  }
+
+  //Refresh list of available classes based on current schedule and wanted classes
+  function refreshAvailableClasses() {
+
   }
 
   return (
@@ -193,9 +199,9 @@ export default function SchedulePage() {
           </div>
         </div>
 
-        {/* Class Selection Section */}
-        <div id="class-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
-            <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Next semester classes</h1>
+        {/* Wanted Classes Selection Section */}
+        <div id="wanted-classes-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
+            <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Add classes you would like to take next semester</h1>
             <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
               {wantedClasses.length === 0 ? (
                 <p className="text-gray-500 mx-80 my-10">No classes selected</p>
@@ -223,13 +229,22 @@ export default function SchedulePage() {
             <HoverButton text="Add Class" onClick={handleAddWantedClassEvent} />
         </div>
 
+        {/* Available classes based on your schedule and wanted classes selection */}
+        <div id="available-classes-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
+            <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Available classes based on your schedule</h1>
+            <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
+              
+            </div>
+
+            <HoverButton text="Refresh List" onClick={refreshAvailableClasses} />
+        </div>
+      
+
       </div>
       {/* end main padding wrapper */}
       
 
-      <div id="footer" className="bottom-0 w-full h-15 bg-gray-800 text-white flex items-center justify-center">
-        <p className="text-sm">Developed by Group 6 CLD</p>
-      </div>
+      <Footer/>
     </main>
   );
 }
