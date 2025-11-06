@@ -15,6 +15,9 @@ export default function SchedulePage() {
   const [className, setClassName] = useState("");
   const [classType, setClassType] = useState("");
   const [classLocation, setClassLocation] = useState("");
+
+  const [wantedClasses, setWantedClasses] = useState<Array<{id: number; className: string; type: string; location: string;}>>([]);
+
   // Each dateTime row: { day: string, time: string }
   const [dateTimes, setDateTimes] = useState<Array<{ day: string; time: string }>>([
     { day: "", time: "" },
@@ -69,6 +72,7 @@ export default function SchedulePage() {
     return `${displayHour}:${mm} ${ampm}`;
   }
 
+  // Add event to the schedule
   function handleAddEvent() {
     const newEvents: Array<{ title: string; day: string; start: number; end: number }> = [];
     for (const row of dateTimes) {
@@ -82,8 +86,16 @@ export default function SchedulePage() {
     setDateTimes([{ day: '', time: '' }]);
   }
 
-  function handleAddClassEvent() {
-
+  // Add wanted class to the list
+  function handleAddWantedClassEvent() {
+    const newWantedClass: Array<{ id: number; className: string; type: string; location: string }> = [];
+    newWantedClass.push({ id: parseInt(classId) || 0, className: className || 'Unnamed', type: classType || 'Unknown', location: classLocation || 'TBD' });
+    setWantedClasses((e) => [...e, ...newWantedClass]);
+    // reset form
+    setClassId('');
+    setClassName('');
+    setClassType('');
+    setClassLocation('');
   }
 
   return (
@@ -185,13 +197,20 @@ export default function SchedulePage() {
         <div id="class-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
             <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Next semester classes</h1>
             <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
-              <WantedClassListItem 
-                id={3306}
-                className='Data Structures'
-                type="CS"
-                location="Online"
-                onClick={() => console.log('Clicked!')}
-              />
+              {wantedClasses.length === 0 ? (
+                <p className="text-gray-500 mx-80 my-10">No classes selected</p>
+              ) : (
+                wantedClasses.map((dt, idx) => (
+                <div key={idx} className="flex items-center w-full">
+                  <WantedClassListItem
+                    id={dt.id}
+                    className={dt.className}
+                    type={dt.type}
+                    location={dt.location}
+                    onClick={() => console.log('Clicked!')}
+                  />
+                </div>
+              )))}
             </div>
 
             <div id="class-input-form-container" className="flex flex-row items-center justify-center gap-4 mb-6 w-200">
@@ -201,12 +220,11 @@ export default function SchedulePage() {
               <InputField text="Location" placeholder="Enter the class location" value={classLocation} example="e.g., Online" name="eventName" onChange={setClassLocation} />
             </div>
 
-            <HoverButton text="Add Class" onClick={handleAddClassEvent} />
+            <HoverButton text="Add Class" onClick={handleAddWantedClassEvent} />
         </div>
 
       </div>
       {/* end main padding wrapper */}
-      
       
 
       <div id="footer" className="bottom-0 w-full h-15 bg-gray-800 text-white flex items-center justify-center">
