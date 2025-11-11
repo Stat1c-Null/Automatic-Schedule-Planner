@@ -18,6 +18,7 @@ export default function SchedulePage() {
   const [classLocation, setClassLocation] = useState("");
 
   const [wantedClasses, setWantedClasses] = useState<Array<{id: number; className: string; type: string; location: string;}>>([]);
+  const [availableClasses, setAvailableClasses] = useState<Array<{id: number; className: string; type: string; location: string;}>>([]);
 
   // Each dateTime row: { day: string, time: string }
   const [dateTimes, setDateTimes] = useState<Array<{ day: string; time: string }>>([
@@ -233,7 +234,14 @@ export default function SchedulePage() {
         <div id="available-classes-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
             <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Available classes based on your schedule</h1>
             <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
-              
+              {availableClasses.length === 0 ? (
+                <p className="text-gray-500 mx-80 my-10">No classes available</p>
+              ) : (
+                availableClasses.map((dt, idx) => (
+                <div key={idx} className="flex items-center w-full">
+                  {/* Create component available classes and call it here*/}
+                </div>
+              )))}
             </div>
 
             <HoverButton text="Refresh List" onClick={refreshAvailableClasses} />
