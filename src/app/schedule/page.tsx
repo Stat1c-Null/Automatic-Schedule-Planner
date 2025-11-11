@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import HoverButton from '@/components/HoverButton';
 import NavBar from '@/components/NavBar';
 import InputField from '@/components/InputField';
@@ -11,6 +10,10 @@ import WantedClassListItem from '@/components/WantedClassListItem';
 import Footer from '@/components/Footer';
 
 export default function SchedulePage() {
+  useEffect(() => {
+    document.title = "Schedule";
+  });
+
   const [eventName, setEventName] = useState("");
   const [classId, setClassId] = useState("");
   const [className, setClassName] = useState("");
