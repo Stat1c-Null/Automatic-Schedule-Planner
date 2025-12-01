@@ -29,12 +29,12 @@ export default function SchedulePage() {
     Array<{ id: number; className: string; type: string; location: string }>
   >([]);
 
-
+  // Each dateTime row: { day: string, time: string }
   const [dateTimes, setDateTimes] = useState<
     Array<{ day: string; time: string }>
   >([{ day: "", time: "" }]);
 
-
+  // Events stored for rendering; each event has title, day, startHour(7-22), endHour
   const [events, setEvents] = useState<
     Array<{ title: string; day: string; start: number; end: number }>
   >([]);
@@ -57,11 +57,12 @@ export default function SchedulePage() {
     );
   }
 
-
+  // Parse a time like "10:00 AM - 11:30 AM" into start/end hours as floats
   function parseTimeRange(range: string): { start: number; end: number } | null {
     const parts = range.split("-").map((s) => s.trim());
     if (parts.length !== 2) return null;
     const toHour = (s: string) => {
+      // Accept formats like "10:00 AM" or "14:00"
       const m = s.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?/i);
       if (!m) return NaN;
       let hour = parseInt(m[1], 10);
@@ -90,6 +91,7 @@ export default function SchedulePage() {
     return `${displayHour}:${mm} ${ampm}`;
   }
 
+  // Add event to the schedule
   function handleAddEvent() {
     const newEvents: Array<{
       title: string;
@@ -99,7 +101,7 @@ export default function SchedulePage() {
     }> = [];
     for (const row of dateTimes) {
       const parsed = parseTimeRange(row.time);
-      if (!parsed) continue;
+      if (!parsed) continue; // skip invalid rows
       newEvents.push({
         title: eventName || "Untitled",
         day: row.day,
@@ -108,11 +110,12 @@ export default function SchedulePage() {
       });
     }
     setEvents((e) => [...e, ...newEvents]);
- 
+    // reset form
     setEventName("");
     setDateTimes([{ day: "", time: "" }]);
   }
 
+  // Add wanted class to the list
   function handleAddWantedClassEvent() {
     const newWantedClass: Array<{
       id: number;
@@ -127,40 +130,28 @@ export default function SchedulePage() {
       location: classLocation || "TBD",
     });
     setWantedClasses((e) => [...e, ...newWantedClass]);
+    // reset form
     setClassId("");
     setClassName("");
     setClassType("");
     setClassLocation("");
   }
 
-function buildScheduleRequestFromState() {
-  const wc = wantedClasses.map((c) => {
-    const prefix = (c.type || "").trim().toUpperCase(); 
-    const num = c.id || 0;
-    const numStr = num ? String(num).trim() : "";
-
-    const code =
-      prefix && numStr
-        ? `${prefix} ${numStr}`
-        : (c.className || "").trim();
+  // Build backend schedule request from current UI state
+  function buildScheduleRequestFromState() {
+    const wc = wantedClasses.map((c) => ({
+      // use the "Name" field as the course code, e.g. "CSE 1321"
+      code: c.className.trim(),
+    }));
 
     return {
-      code,                          
-      humanName: (c.className || "").trim(), 
-      typePrefix: prefix || null,
-      location: (c.location || "").trim() || null,
+      busyBlocks: [], // TODO: map dateTimes -> busyBlocks later
+      wantedClasses: wc,
+      transportMode: "drive" as const,
     };
-  });
+  }
 
-  return {
-    busyBlocks: [],
-    wantedClasses: wc,
-    transportMode: "drive" as const,
-  };
-}
-
-
- 
+  // Refresh list of available classes based on backend-generated schedule
   async function refreshAvailableClasses() {
     try {
       const reqBody = buildScheduleRequestFromState();
@@ -190,9 +181,9 @@ function buildScheduleRequestFromState() {
   return (
     <main className="bg-black">
       <NavBar />
- 
+      {/* pad the page content so the fixed NavBar doesn't overlap it */}
       <div className="pt-16">
-   
+        {/* Add Event Section */}
         <div
           id="add-event-container"
           className="flex flex-col items-center justify-center m-4 mt-0 mb-4"
@@ -242,13 +233,13 @@ function buildScheduleRequestFromState() {
           <HoverButton text="Add Event" onClick={handleAddEvent} />
         </div>
 
- 
+        {/* Schedule Display Section */}
         <div
           id="schedule-container"
           className="rounded-lg shadow-lg p-4 m-4 mt-6 border border-gray-300 overflow-auto"
         >
           <div className="min-w-[900px] grid grid-cols-[120px_repeat(5,1fr)] gap-2">
-
+            {/* Time labels column */}
             <div className="flex flex-col">
               <div className="h-12 flex items-center justify-center font-bold">
                 &nbsp;
@@ -256,7 +247,7 @@ function buildScheduleRequestFromState() {
               {Array.from({ length: 16 }).map((_, i) => {
                 const hour = 7 + i;
                 const ampm = hour < 12 ? "AM" : "PM";
-                const displayHour = ((hour + 11) % 12) + 1;
+                const displayHour = ((hour + 11) % 12) + 1; // convert 0-23 to 12-hour
                 return (
                   <div
                     key={i}
@@ -268,7 +259,7 @@ function buildScheduleRequestFromState() {
               })}
             </div>
 
-  
+            {/* Days columns */}
             {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(
               (day) => (
                 <div
@@ -286,7 +277,7 @@ function buildScheduleRequestFromState() {
                       />
                     ))}
 
-        
+                    {/* Render all of the events for current day */}
                     {events
                       .map((ev, idx) => ({ ev, idx }))
                       .filter(
@@ -319,7 +310,7 @@ function buildScheduleRequestFromState() {
           </div>
         </div>
 
-     
+        {/* Wanted Classes Selection Section */}
         <div
           id="wanted-classes-selection-container"
           className="flex flex-col items-center justify-center m-4 mt-0 mb-4"
@@ -366,7 +357,7 @@ function buildScheduleRequestFromState() {
               text="Name"
               placeholder="Enter the class name"
               value={className}
-              example="e.g., Data Structures"
+              example="e.g., CSE 1321"
               name="eventName"
               onChange={setClassName}
             />
@@ -391,7 +382,7 @@ function buildScheduleRequestFromState() {
           <HoverButton text="Add Class" onClick={handleAddWantedClassEvent} />
         </div>
 
-  
+        {/* Available classes based on your schedule and wanted classes selection */}
         <div
           id="available-classes-selection-container"
           className="flex flex-col items-center justify-center m-4 mt-0 mb-4"
@@ -416,7 +407,7 @@ function buildScheduleRequestFromState() {
                   className="flex flex-col w-full border-b border-gray-700 py-3 text-white"
                 >
                   <div className="flex justify-between">
-                    <span className="font-semibold">{cls.title}</span>
+                    <span className="font-semibold">{cls.code}</span>
                     {cls.professor.name && (
                       <span>
                         {cls.professor.name}{" "}
@@ -444,8 +435,9 @@ function buildScheduleRequestFromState() {
           <HoverButton text="Refresh List" onClick={refreshAvailableClasses} />
         </div>
       </div>
+      {/* end main padding wrapper */}
 
-
+      {/* Debug output: schedules returned from backend (for development; remove later if you want) */}
       <pre className="text-xs text-white bg-gray-900 p-2 mt-4 rounded max-h-64 overflow-auto">
         {JSON.stringify(generatedSchedules, null, 2)}
       </pre>
