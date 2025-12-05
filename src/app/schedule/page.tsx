@@ -16,6 +16,37 @@ export default function SchedulePage() {
     document.title = "Schedule";
   }, []);
 
+  // LOAD COURSE CATALOG FROM BACKEND ONCE
+useEffect(() => {
+  async function loadCourses() {
+    try {
+      const res = await fetch("/api/v1/courses?program=Computer%20Science%20B.S.");
+      if (!res.ok) {
+        console.error("Courses API error", await res.text());
+        return;
+      }
+
+      // API returns an array of CourseDTO:
+      // { program_title, course: { name, catalog_id, core_id, course_id } }
+      const data: Array<{
+        program_title: string;
+        course: { name: string; catalog_id: number; core_id: number; course_id: number };
+      }> = await res.json();
+
+      const codes = data.map((c) => extractCourseCode(c.course.name));
+      setAvailableCourseCodes(codes);
+    } catch (err) {
+      console.error("Network or parsing error while loading courses", err);
+    } finally {
+      setCoursesLoaded(true);
+    }
+  }
+
+  loadCourses();
+}, []);
+  //
+
+
     // CONVERTS FLOATING POINT HOURS TO HH:MM STRING
 function hoursToTimeString(value: number): string {
   const hour = Math.floor(value);
@@ -38,6 +69,12 @@ function normalizeDay(day: string): string {
   return day.trim().toLowerCase().slice(0, 3); 
 }
   //
+
+  // EXTRACTS THE COURSE CODE PREFIX FROM "CS 3502: Operating Systems" -> "CS 3502"
+function extractCourseCode(courseName: string): string {
+  return courseName.split(":")[0].trim().toUpperCase();
+}
+//
 
   // CLASS OVERLAP CHECKER
 type Timeslot = {
@@ -66,6 +103,11 @@ function timeslotsOverlap(a: Timeslot, b: Timeslot): boolean {
   //WARNING TO STORE CLASS NOT FOUND
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   //
+
+  // ALL VALID COURSE CODES LOADED FROM /api/v1/courses
+const [availableCourseCodes, setAvailableCourseCodes] = useState<string[]>([]);
+const [coursesLoaded, setCoursesLoaded] = useState(false);
+  //  
 
   const [generatedSchedules, setGeneratedSchedules] =
     useState<ScheduleResponse["schedules"]>([]);
@@ -169,63 +211,61 @@ function handleAddWantedClassEvent() {
 
   const trimmedId = classId.trim();
   const trimmedType = classType.trim().toUpperCase();
+
   if (!trimmedId || !trimmedType) {
     setWarningMessage(
-      "Please enter both a class ID and a class type (e.g., CS 3306)."
+      "Please enter both a class ID and a class type (e.g., CS 3305)."
     );
     return;
   }
+
+
+  if (!coursesLoaded) {
+    setWarningMessage("Course list is still loading. Please try again in a moment.");
+    return;
+  }
+
+  if (availableCourseCodes.length === 0) {
+ 
+    setWarningMessage(
+      "Could not load the course catalog from the server. Please try refreshing the page."
+    );
+    return;
+  }
+
+
+  const desiredCode = `${trimmedType} ${trimmedId}`.toUpperCase();
+
+  const existsInCatalog = availableCourseCodes.some(
+    (code) => code.toUpperCase() === desiredCode
+  );
+
+  if (!existsInCatalog) {
+    setWarningMessage(
+      "Class not found in the course catalog API. Please check the ID and type."
+    );
+    return;
+  }
+
+
   const alreadyInWanted = wantedClasses.some(
     (c) =>
       c.id === parseInt(trimmedId, 10) &&
       c.type.toUpperCase() === trimmedType
   );
+
   if (alreadyInWanted) {
     setWarningMessage("This class is already in your wanted list.");
     return;
   }
-  const allApiClasses = generatedSchedules.flat();
 
-  if (allApiClasses.length === 0) {
-
-    const fallbackCode =
-      className.trim() !== ""
-        ? className.trim()
-        : `${trimmedType} ${trimmedId}`;
-
-    const newWantedClass = {
-      id: parseInt(trimmedId, 10),
-      className: fallbackCode,
-      type: trimmedType,
-      location: classLocation || "TBD",
-    };
-
-    setWantedClasses((prev) => [...prev, newWantedClass]);
-
-    setClassId("");
-    setClassName("");
-    setClassType("");
-    setClassLocation("");
-    return;
-  }
-  const desiredCode = `${trimmedType} ${trimmedId}`.toUpperCase();
-
-  const matchedClass = allApiClasses.find(
-    (cls) => cls.code.toUpperCase() === desiredCode
-  );
-
-  if (!matchedClass) {
-    setWarningMessage(
-      "Class not found in the classes returned by the backend. Please check the ID and type."
-    );
-    return;
-  }
   const newWantedClass = {
     id: parseInt(trimmedId, 10),
-    className: matchedClass.code,
+    className: desiredCode, 
     type: trimmedType,
     location: classLocation || "TBD",
   };
+
   setWantedClasses((prev) => [...prev, newWantedClass]);
   setClassId("");
   setClassName("");
@@ -477,7 +517,7 @@ function handleAddWantedClassEvent() {
               text="Class ID"
               placeholder="Enter the class ID"
               value={classId}
-              example="e.g., 3306"
+              example="e.g., 3305"
               name="eventName"
               onChange={setClassId}
             />
