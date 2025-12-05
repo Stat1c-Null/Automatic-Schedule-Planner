@@ -16,11 +16,56 @@ export default function SchedulePage() {
     document.title = "Schedule";
   }, []);
 
+    // CONVERTS FLOATING POINT HOURS TO HH:MM STRING
+function hoursToTimeString(value: number): string {
+  const hour = Math.floor(value);
+  const minutes = Math.round((value - hour) * 60);
+  const hh = hour.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+  //
+
+  // CONVERTS H:M TO TOTAL MINUTES FOR CLARITY
+  function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+  //
+
+  // CONVERTES SHORTENED DAY STRINGS TO STANDARD FORM
+function normalizeDay(day: string): string {
+  return day.trim().toLowerCase().slice(0, 3); 
+}
+  //
+
+  // CLASS OVERLAP CHECKER
+type Timeslot = {
+  day: string;    
+  start: string;  
+  end: string;    
+};
+function timeslotsOverlap(a: Timeslot, b: Timeslot): boolean {
+  if (normalizeDay(a.day) !== normalizeDay(b.day)) return false;
+
+  const startA = timeToMinutes(a.start);
+  const endA = timeToMinutes(a.end);
+  const startB = timeToMinutes(b.start);
+  const endB = timeToMinutes(b.end);
+  return startA < endB && startB < endA;
+}
+
+  //
+
   const [eventName, setEventName] = useState("");
   const [classId, setClassId] = useState("");
   const [className, setClassName] = useState("");
   const [classType, setClassType] = useState("");
   const [classLocation, setClassLocation] = useState("");
+
+  //WARNING TO STORE CLASS NOT FOUND
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  //
 
   const [generatedSchedules, setGeneratedSchedules] =
     useState<ScheduleResponse["schedules"]>([]);
@@ -115,27 +160,101 @@ export default function SchedulePage() {
     setDateTimes([{ day: "", time: "" }]);
   }
 
-  // Add wanted class to the list
-  function handleAddWantedClassEvent() {
-    const newWantedClass: Array<{
-      id: number;
-      className: string;
-      type: string;
-      location: string;
-    }> = [];
-    newWantedClass.push({
-      id: parseInt(classId) || 0,
-      className: className || "Unnamed",
-      type: classType || "Unknown",
+
+
+  //OTHER VERSION TOOK USER INPUT AND CREATED AN OBJECT WITHOUT VALIDATION
+  //THIS VERSION ENSURES THE CLASS EXISTS IN API
+function handleAddWantedClassEvent() {
+  setWarningMessage(null);
+
+  const trimmedId = classId.trim();
+  const trimmedType = classType.trim().toUpperCase();
+  if (!trimmedId || !trimmedType) {
+    setWarningMessage(
+      "Please enter both a class ID and a class type (e.g., CS 3306)."
+    );
+    return;
+  }
+  const alreadyInWanted = wantedClasses.some(
+    (c) =>
+      c.id === parseInt(trimmedId, 10) &&
+      c.type.toUpperCase() === trimmedType
+  );
+  if (alreadyInWanted) {
+    setWarningMessage("This class is already in your wanted list.");
+    return;
+  }
+  const allApiClasses = generatedSchedules.flat();
+
+  if (allApiClasses.length === 0) {
+
+    const fallbackCode =
+      className.trim() !== ""
+        ? className.trim()
+        : `${trimmedType} ${trimmedId}`;
+
+    const newWantedClass = {
+      id: parseInt(trimmedId, 10),
+      className: fallbackCode,
+      type: trimmedType,
       location: classLocation || "TBD",
-    });
-    setWantedClasses((e) => [...e, ...newWantedClass]);
-    // reset form
+    };
+
+    setWantedClasses((prev) => [...prev, newWantedClass]);
+
     setClassId("");
     setClassName("");
     setClassType("");
     setClassLocation("");
+    return;
   }
+  const desiredCode = `${trimmedType} ${trimmedId}`.toUpperCase();
+
+  const matchedClass = allApiClasses.find(
+    (cls) => cls.code.toUpperCase() === desiredCode
+  );
+
+  if (!matchedClass) {
+    setWarningMessage(
+      "Class not found in the classes returned by the backend. Please check the ID and type."
+    );
+    return;
+  }
+  const newWantedClass = {
+    id: parseInt(trimmedId, 10),
+    className: matchedClass.code,
+    type: trimmedType,
+    location: classLocation || "TBD",
+  };
+  setWantedClasses((prev) => [...prev, newWantedClass]);
+  setClassId("");
+  setClassName("");
+  setClassType("");
+  setClassLocation("");
+}
+
+
+  // Add wanted class to the list
+  //function handleAddWantedClassEvent() {
+  //  const newWantedClass: Array<{
+  //    id: number;
+  //    className: string;
+  //    type: string;
+  //    location: string;
+  //  }> = [];
+  //  newWantedClass.push({
+  //    id: parseInt(classId) || 0,
+  //    className: className || "Unnamed",
+  //    type: classType || "Unknown",
+  //    location: classLocation || "TBD",
+  //  });
+  //  setWantedClasses((e) => [...e, ...newWantedClass]);
+  //  // reset form
+  //  setClassId("");
+  //  setClassName("");
+  //  setClassType("");
+  //  setClassLocation("");
+  //}
 
   // Build backend schedule request from current UI state
   function buildScheduleRequestFromState() {
@@ -177,6 +296,15 @@ export default function SchedulePage() {
       console.error("Network or parsing error", err);
     }
   }
+
+  // PRECOMUTING TIME CHANGES ONLY ONCE FOR ALL EVENTS TO AVOID REDUNDANT CALCULATIONS
+  const eventTimeslots: Timeslot[] = events.map((ev) => ({
+    day: ev.day,
+    start: hoursToTimeString(ev.start),
+    end: hoursToTimeString(ev.end),
+  }));
+  //
+
 
   return (
     <main className="bg-black">
@@ -357,7 +485,7 @@ export default function SchedulePage() {
               text="Name"
               placeholder="Enter the class name"
               value={className}
-              example="e.g., CSE 1321"
+              example="e.g., Data Structures"
               name="eventName"
               onChange={setClassName}
             />
@@ -380,6 +508,12 @@ export default function SchedulePage() {
           </div>
 
           <HoverButton text="Add Class" onClick={handleAddWantedClassEvent} />
+          {warningMessage && (
+           <p className="text-red-400 mt-2">
+            {warningMessage}
+          </p>
+          )}
+
         </div>
 
         {/* Available classes based on your schedule and wanted classes selection */}
@@ -401,7 +535,19 @@ export default function SchedulePage() {
                 schedule.
               </p>
             ) : (
-              generatedSchedules[0].map((cls, idx) => (
+              generatedSchedules[0].map((cls, idx) => {
+                const hasConflict = eventTimeslots.some((evSlot) =>
+                  timeslotsOverlap(
+                    {
+                      day: cls.timeslot.day,
+                      start: cls.timeslot.start,
+                      end: cls.timeslot.end,
+                    },
+                    evSlot
+                  )
+                );
+
+                return(
                 <div
                   key={idx}
                   className="flex flex-col w-full border-b border-gray-700 py-3 text-white"
@@ -427,8 +573,14 @@ export default function SchedulePage() {
                     {cls.timeslot.day} {cls.timeslot.start}–{cls.timeslot.end} @{" "}
                     {cls.timeslot.location}
                   </div>
-                </div>
-              ))
+                    {hasConflict && (
+                      <div className="text-sm text-red-400 mt-1">
+                        Schedule Conflict
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
 
