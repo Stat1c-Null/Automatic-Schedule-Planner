@@ -9,6 +9,8 @@ import {
   getTeacherByName,
 } from "@/lib/repo";
 
+import { generateSchedule, ScheduleRequest } from "@/lib/scheduler";
+
 export const runtime = "nodejs";
 
 /*
@@ -51,3 +53,21 @@ export async function GET(req: NextRequest) {
   // else not found
   return new Response("Not found", { status: 404 });
 }
+export async function POST(req: NextRequest) {
+  const url = req.nextUrl;
+  const path = url.pathname.split("/").slice(3);
+
+  if (!path[0]) {
+    return new Response("No endpoint requested", { status: 400 });
+  }
+
+
+  if (path[0] === "schedule") {
+    const body = (await req.json()) as ScheduleRequest;
+    const result = await generateSchedule(body);
+    return Response.json(result);
+  }
+
+  return new Response("Not found", { status: 404 });
+}
+

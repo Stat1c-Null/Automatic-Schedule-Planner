@@ -1,18 +1,98 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import HoverButton from '@/components/HoverButton';
-import NavBar from '@/components/NavBar';
-import InputField from '@/components/InputField';
-import DateTime from '@/components/DateTime';
-import HoverButtonSmall from '@/components/HoverButtonSmall';
-import CalendarEvent from '@/components/CalendarEvent';
-import WantedClassListItem from '@/components/WantedClassListItem';
-import Footer from '@/components/Footer';
+
+import React, { useState, useEffect } from "react";
+import HoverButton from "@/components/HoverButton";
+import NavBar from "@/components/NavBar";
+import InputField from "@/components/InputField";
+import DateTime from "@/components/DateTime";
+import HoverButtonSmall from "@/components/HoverButtonSmall";
+import CalendarEvent from "@/components/CalendarEvent";
+import WantedClassListItem from "@/components/WantedClassListItem";
+import Footer from "@/components/Footer";
+import type { ScheduleResponse } from "@/lib/scheduler";
 
 export default function SchedulePage() {
   useEffect(() => {
     document.title = "Schedule";
-  });
+  }, []);
+
+  // LOAD COURSE CATALOG FROM BACKEND ONCE
+useEffect(() => {
+  async function loadCourses() {
+    try {
+      const res = await fetch("/api/v1/courses?program=Computer%20Science%20B.S.");
+      if (!res.ok) {
+        console.error("Courses API error", await res.text());
+        return;
+      }
+
+      // API returns an array of CourseDTO:
+      // { program_title, course: { name, catalog_id, core_id, course_id } }
+      const data: Array<{
+        program_title: string;
+        course: { name: string; catalog_id: number; core_id: number; course_id: number };
+      }> = await res.json();
+
+      const codes = data.map((c) => extractCourseCode(c.course.name));
+      setAvailableCourseCodes(codes);
+    } catch (err) {
+      console.error("Network or parsing error while loading courses", err);
+    } finally {
+      setCoursesLoaded(true);
+    }
+  }
+
+  loadCourses();
+}, []);
+  //
+
+
+    // CONVERTS FLOATING POINT HOURS TO HH:MM STRING
+function hoursToTimeString(value: number): string {
+  const hour = Math.floor(value);
+  const minutes = Math.round((value - hour) * 60);
+  const hh = hour.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+  //
+
+  // CONVERTS H:M TO TOTAL MINUTES FOR CLARITY
+  function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+  //
+
+  // CONVERTES SHORTENED DAY STRINGS TO STANDARD FORM
+function normalizeDay(day: string): string {
+  return day.trim().toLowerCase().slice(0, 3); 
+}
+  //
+
+  // EXTRACTS THE COURSE CODE PREFIX FROM "CS 3502: Operating Systems" -> "CS 3502"
+function extractCourseCode(courseName: string): string {
+  return courseName.split(":")[0].trim().toUpperCase();
+}
+//
+
+  // CLASS OVERLAP CHECKER
+type Timeslot = {
+  day: string;    
+  start: string;  
+  end: string;    
+};
+function timeslotsOverlap(a: Timeslot, b: Timeslot): boolean {
+  if (normalizeDay(a.day) !== normalizeDay(b.day)) return false;
+
+  const startA = timeToMinutes(a.start);
+  const endA = timeToMinutes(a.end);
+  const startB = timeToMinutes(b.start);
+  const endB = timeToMinutes(b.end);
+  return startA < endB && startB < endA;
+}
+
+  //
 
   const [eventName, setEventName] = useState("");
   const [classId, setClassId] = useState("");
@@ -20,16 +100,31 @@ export default function SchedulePage() {
   const [classType, setClassType] = useState("");
   const [classLocation, setClassLocation] = useState("");
 
-  const [wantedClasses, setWantedClasses] = useState<Array<{id: number; className: string; type: string; location: string;}>>([]);
-  const [availableClasses, setAvailableClasses] = useState<Array<{id: number; className: string; type: string; location: string;}>>([]);
+  //WARNING TO STORE CLASS NOT FOUND
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  //
+
+  // ALL VALID COURSE CODES LOADED FROM /api/v1/courses
+const [availableCourseCodes, setAvailableCourseCodes] = useState<string[]>([]);
+const [coursesLoaded, setCoursesLoaded] = useState(false);
+  //  
+
+  const [generatedSchedules, setGeneratedSchedules] =
+    useState<ScheduleResponse["schedules"]>([]);
+
+  const [wantedClasses, setWantedClasses] = useState<
+    Array<{ id: number; className: string; type: string; location: string }>
+  >([]);
 
   // Each dateTime row: { day: string, time: string }
-  const [dateTimes, setDateTimes] = useState<Array<{ day: string; time: string }>>([
-    { day: "", time: "" },
-  ]);
+  const [dateTimes, setDateTimes] = useState<
+    Array<{ day: string; time: string }>
+  >([{ day: "", time: "" }]);
 
   // Events stored for rendering; each event has title, day, startHour(7-22), endHour
-  const [events, setEvents] = useState<Array<{ title: string; day: string; start: number; end: number }>>([]);
+  const [events, setEvents] = useState<
+    Array<{ title: string; day: string; start: number; end: number }>
+  >([]);
 
   function addDateTimeRow() {
     setDateTimes((d) => [...d, { day: "", time: "" }]);
@@ -39,13 +134,19 @@ export default function SchedulePage() {
     setDateTimes((d) => d.filter((_, i) => i !== index));
   }
 
-  function updateDateTimeRow(index: number, field: 'day' | 'time', value: string) {
-    setDateTimes((d) => d.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  function updateDateTimeRow(
+    index: number,
+    field: "day" | "time",
+    value: string
+  ) {
+    setDateTimes((d) =>
+      d.map((row, i) => (i === index ? { ...row, [field]: value } : row))
+    );
   }
 
   // Parse a time like "10:00 AM - 11:30 AM" into start/end hours as floats
   function parseTimeRange(range: string): { start: number; end: number } | null {
-    const parts = range.split('-').map((s) => s.trim());
+    const parts = range.split("-").map((s) => s.trim());
     if (parts.length !== 2) return null;
     const toHour = (s: string) => {
       // Accept formats like "10:00 AM" or "14:00"
@@ -56,8 +157,8 @@ export default function SchedulePage() {
       const ampm = m[3];
       if (ampm) {
         const up = ampm.toUpperCase();
-        if (up === 'PM' && hour !== 12) hour += 12;
-        if (up === 'AM' && hour === 12) hour = 0;
+        if (up === "PM" && hour !== 12) hour += 12;
+        if (up === "AM" && hour === 12) hour = 0;
       }
       return hour + minutes / 60;
     };
@@ -71,55 +172,206 @@ export default function SchedulePage() {
   function formatHour(value: number) {
     const hour = Math.floor(value);
     const minutes = Math.round((value - hour) * 60);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const ampm = hour >= 12 ? "PM" : "AM";
     const displayHour = ((hour + 11) % 12) + 1;
-    const mm = minutes.toString().padStart(2, '0');
+    const mm = minutes.toString().padStart(2, "0");
     return `${displayHour}:${mm} ${ampm}`;
   }
 
   // Add event to the schedule
   function handleAddEvent() {
-    const newEvents: Array<{ title: string; day: string; start: number; end: number }> = [];
+    const newEvents: Array<{
+      title: string;
+      day: string;
+      start: number;
+      end: number;
+    }> = [];
     for (const row of dateTimes) {
       const parsed = parseTimeRange(row.time);
       if (!parsed) continue; // skip invalid rows
-      newEvents.push({ title: eventName || 'Untitled', day: row.day, start: parsed.start, end: parsed.end });
+      newEvents.push({
+        title: eventName || "Untitled",
+        day: row.day,
+        start: parsed.start,
+        end: parsed.end,
+      });
     }
     setEvents((e) => [...e, ...newEvents]);
     // reset form
-    setEventName('');
-    setDateTimes([{ day: '', time: '' }]);
+    setEventName("");
+    setDateTimes([{ day: "", time: "" }]);
   }
+
+
+
+  //OTHER VERSION TOOK USER INPUT AND CREATED AN OBJECT WITHOUT VALIDATION
+  //THIS VERSION ENSURES THE CLASS EXISTS IN API
+function handleAddWantedClassEvent() {
+  setWarningMessage(null);
+
+  const trimmedId = classId.trim();
+  const trimmedType = classType.trim().toUpperCase();
+
+  if (!trimmedId || !trimmedType) {
+    setWarningMessage(
+      "Please enter both a class ID and a class type (e.g., CS 3305)."
+    );
+    return;
+  }
+
+
+  if (!coursesLoaded) {
+    setWarningMessage("Course list is still loading. Please try again in a moment.");
+    return;
+  }
+
+  if (availableCourseCodes.length === 0) {
+ 
+    setWarningMessage(
+      "Could not load the course catalog from the server. Please try refreshing the page."
+    );
+    return;
+  }
+
+
+  const desiredCode = `${trimmedType} ${trimmedId}`.toUpperCase();
+
+  const existsInCatalog = availableCourseCodes.some(
+    (code) => code.toUpperCase() === desiredCode
+  );
+
+  if (!existsInCatalog) {
+    setWarningMessage(
+      "Class not found in the course catalog API. Please check the ID and type."
+    );
+    return;
+  }
+
+
+  const alreadyInWanted = wantedClasses.some(
+    (c) =>
+      c.id === parseInt(trimmedId, 10) &&
+      c.type.toUpperCase() === trimmedType
+  );
+
+  if (alreadyInWanted) {
+    setWarningMessage("This class is already in your wanted list.");
+    return;
+  }
+
+  const newWantedClass = {
+    id: parseInt(trimmedId, 10),
+    className: desiredCode, 
+    type: trimmedType,
+    location: classLocation || "TBD",
+  };
+
+  setWantedClasses((prev) => [...prev, newWantedClass]);
+  setClassId("");
+  setClassName("");
+  setClassType("");
+  setClassLocation("");
+}
+
 
   // Add wanted class to the list
-  function handleAddWantedClassEvent() {
-    const newWantedClass: Array<{ id: number; className: string; type: string; location: string }> = [];
-    newWantedClass.push({ id: parseInt(classId) || 0, className: className || 'Unnamed', type: classType || 'Unknown', location: classLocation || 'TBD' });
-    setWantedClasses((e) => [...e, ...newWantedClass]);
-    // reset form
-    setClassId('');
-    setClassName('');
-    setClassType('');
-    setClassLocation('');
+  //function handleAddWantedClassEvent() {
+  //  const newWantedClass: Array<{
+  //    id: number;
+  //    className: string;
+  //    type: string;
+  //    location: string;
+  //  }> = [];
+  //  newWantedClass.push({
+  //    id: parseInt(classId) || 0,
+  //    className: className || "Unnamed",
+  //    type: classType || "Unknown",
+  //    location: classLocation || "TBD",
+  //  });
+  //  setWantedClasses((e) => [...e, ...newWantedClass]);
+  //  // reset form
+  //  setClassId("");
+  //  setClassName("");
+  //  setClassType("");
+  //  setClassLocation("");
+  //}
+
+  // Build backend schedule request from current UI state
+  function buildScheduleRequestFromState() {
+    const wc = wantedClasses.map((c) => ({
+      // use the "Name" field as the course code, e.g. "CSE 1321"
+      code: c.className.trim(),
+    }));
+
+    return {
+      busyBlocks: [], // TODO: map dateTimes -> busyBlocks later
+      wantedClasses: wc,
+      transportMode: "drive" as const,
+    };
   }
 
-  //Refresh list of available classes based on current schedule and wanted classes
-  function refreshAvailableClasses() {
+  // Refresh list of available classes based on backend-generated schedule
+  async function refreshAvailableClasses() {
+    try {
+      const reqBody = buildScheduleRequestFromState();
 
+      const res = await fetch("/api/v1/schedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reqBody),
+      });
+
+      if (!res.ok) {
+        console.error("Schedule API error", await res.text());
+        return;
+      }
+
+      const data: ScheduleResponse = await res.json();
+      setGeneratedSchedules(data.schedules);
+
+      console.log("Generated schedules from backend:", data.schedules);
+    } catch (err) {
+      console.error("Network or parsing error", err);
+    }
   }
+
+  // PRECOMUTING TIME CHANGES ONLY ONCE FOR ALL EVENTS TO AVOID REDUNDANT CALCULATIONS
+  const eventTimeslots: Timeslot[] = events.map((ev) => ({
+    day: ev.day,
+    start: hoursToTimeString(ev.start),
+    end: hoursToTimeString(ev.end),
+  }));
+  //
+
 
   return (
-    <main className='bg-black'>
-      <NavBar/>
+    <main className="bg-black">
+      <NavBar />
       {/* pad the page content so the fixed NavBar doesn't overlap it */}
       <div className="pt-16">
-
         {/* Add Event Section */}
-        <div id="add-event-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
-          <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Add new event to your schedule</h1>
-          <InputField text="Event Name" placeholder="Enter the event name" value={eventName} example="e.g., Math Class" name="eventName" onChange={setEventName} />
+        <div
+          id="add-event-container"
+          className="flex flex-col items-center justify-center m-4 mt-0 mb-4"
+        >
+          <h1 className="text-2xl font-bold mb-4 mt-30 text-white">
+            Add new event to your schedule
+          </h1>
+          <InputField
+            text="Event Name"
+            placeholder="Enter the event name"
+            value={eventName}
+            example="e.g., Math Class"
+            name="eventName"
+            onChange={setEventName}
+          />
 
-          <div id="event-date-time-container" className="flex flex-col items-center justify-center gap-4 mb-6 w-full max-w-2xl">
+          <div
+            id="event-date-time-container"
+            className="flex flex-col items-center justify-center gap-4 mb-6 w-full max-w-2xl"
+          >
             {dateTimes.map((dt, idx) => (
               <div key={idx} className="flex items-center w-full">
                 <DateTime
@@ -131,14 +383,15 @@ export default function SchedulePage() {
                   timeValue={dt.time}
                   name={`eventDateTime-${idx}`}
                   index={idx}
-                  onDayChange={(v) => updateDateTimeRow(idx, 'day', v)}
-                  onTimeChange={(v) => updateDateTimeRow(idx, 'time', v)}
+                  onDayChange={(v) => updateDateTimeRow(idx, "day", v)}
+                  onTimeChange={(v) => updateDateTimeRow(idx, "time", v)}
                 />
                 <div className="ml-2 mt-5 flex flex-col gap-2">
-                  {idx === 0 ? (
-                    null
-                  ) : (
-                    <HoverButtonSmall text="-" onClick={() => removeDateTimeRow(idx)} />
+                  {idx === 0 ? null : (
+                    <HoverButtonSmall
+                      text="-"
+                      onClick={() => removeDateTimeRow(idx)}
+                    />
                   )}
                 </div>
               </div>
@@ -149,17 +402,25 @@ export default function SchedulePage() {
         </div>
 
         {/* Schedule Display Section */}
-        <div id="schedule-container" className="rounded-lg shadow-lg p-4 m-4 mt-6 border border-gray-300 overflow-auto">
+        <div
+          id="schedule-container"
+          className="rounded-lg shadow-lg p-4 m-4 mt-6 border border-gray-300 overflow-auto"
+        >
           <div className="min-w-[900px] grid grid-cols-[120px_repeat(5,1fr)] gap-2">
             {/* Time labels column */}
             <div className="flex flex-col">
-              <div className="h-12 flex items-center justify-center font-bold">&nbsp;</div>
+              <div className="h-12 flex items-center justify-center font-bold">
+                &nbsp;
+              </div>
               {Array.from({ length: 16 }).map((_, i) => {
                 const hour = 7 + i;
-                const ampm = hour < 12 ? 'AM' : 'PM';
+                const ampm = hour < 12 ? "AM" : "PM";
                 const displayHour = ((hour + 11) % 12) + 1; // convert 0-23 to 12-hour
                 return (
-                  <div key={i} className="h-12 border-t border-gray-200 text-sm text-white flex items-start pl-2">
+                  <div
+                    key={i}
+                    className="h-12 border-t border-gray-200 text-sm text-white flex items-start pl-2"
+                  >
                     {`${displayHour}:00 ${ampm}`}
                   </div>
                 );
@@ -167,95 +428,213 @@ export default function SchedulePage() {
             </div>
 
             {/* Days columns */}
-            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
-              <div key={day} className="relative border border-gray-100 bg-gray-800 text-white rounded-xs">
-                <div className="h-12 flex items-center justify-center font-semibold border-b border-gray-100 bg-black">
-                  {day}
-                </div>
-                <div className="relative">
-                  {Array.from({ length: 16 }).map((_, i) => (
-                    <div key={i} className="h-12 border-t border-gray-100 bg-black hover:bg-gray-500" />
-                  ))}
+            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map(
+              (day) => (
+                <div
+                  key={day}
+                  className="relative border border-gray-100 bg-gray-800 text-white rounded-xs"
+                >
+                  <div className="h-12 flex items-center justify-center font-semibold border-b border-gray-100 bg-black">
+                    {day}
+                  </div>
+                  <div className="relative">
+                    {Array.from({ length: 16 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-12 border-t border-gray-100 bg-black hover:bg-gray-500"
+                      />
+                    ))}
 
-                  {/* Render all of the events for current day */}
-                  {events
-                    .map((ev, idx) => ({ ev, idx }))
-                    .filter(({ ev }) => ev.day.toLowerCase() === day.toLowerCase())
-                    .map(({ ev, idx }) => {
-                      const dayStart = 7;
-                      const slotHeight = 48; 
-                      const top = (ev.start - dayStart) * slotHeight;
-                      const height = Math.max((ev.end - ev.start) * slotHeight, slotHeight * 0.5);
-                      return (
-                        <CalendarEvent 
-                          key={idx}
-                          idx={idx}
-                          ev={ev}
-                          top={top}
-                          height={height}
-                          formatHour={formatHour}
-                        />
-                      );
-                    })}
+                    {/* Render all of the events for current day */}
+                    {events
+                      .map((ev, idx) => ({ ev, idx }))
+                      .filter(
+                        ({ ev }) =>
+                          ev.day.toLowerCase() === day.toLowerCase()
+                      )
+                      .map(({ ev, idx }) => {
+                        const dayStart = 7;
+                        const slotHeight = 48;
+                        const top = (ev.start - dayStart) * slotHeight;
+                        const height = Math.max(
+                          (ev.end - ev.start) * slotHeight,
+                          slotHeight * 0.5
+                        );
+                        return (
+                          <CalendarEvent
+                            key={idx}
+                            idx={idx}
+                            ev={ev}
+                            top={top}
+                            height={height}
+                            formatHour={formatHour}
+                          />
+                        );
+                      })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
 
         {/* Wanted Classes Selection Section */}
-        <div id="wanted-classes-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
-            <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Add classes you would like to take next semester</h1>
-            <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
-              {wantedClasses.length === 0 ? (
-                <p className="text-gray-500 mx-80 my-10">No classes selected</p>
-              ) : (
-                wantedClasses.map((dt, idx) => (
+        <div
+          id="wanted-classes-selection-container"
+          className="flex flex-col items-center justify-center m-4 mt-0 mb-4"
+        >
+          <h1 className="text-2xl font-bold mb-4 mt-30 text-white">
+            Add classes you would like to take next semester
+          </h1>
+          <div
+            id="classes-container"
+            className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto"
+          >
+            {wantedClasses.length === 0 ? (
+              <p className="text-gray-500 mx-80 my-10">
+                No classes selected
+              </p>
+            ) : (
+              wantedClasses.map((dt, idx) => (
                 <div key={idx} className="flex items-center w-full">
                   <WantedClassListItem
                     id={dt.id}
                     className={dt.className}
                     type={dt.type}
                     location={dt.location}
-                    onClick={() => console.log('Clicked!')}
+                    onClick={() => console.log("Clicked!")}
                   />
                 </div>
-              )))}
-            </div>
+              ))
+            )}
+          </div>
 
-            <div id="class-input-form-container" className="flex flex-row items-center justify-center gap-4 mb-6 w-200">
-              <InputField text="Class ID" placeholder="Enter the class ID" value={classId} example="e.g., 3306" name="eventName" onChange={setClassId} />
-              <InputField text="Name" placeholder="Enter the class name" value={className} example="e.g., Data Structures" name="eventName" onChange={setClassName} />
-              <InputField text="Type" placeholder="Enter the class type" value={classType} example="e.g., CS" name="eventName" onChange={setClassType} />
-              <InputField text="Location" placeholder="Enter the class location" value={classLocation} example="e.g., Online" name="eventName" onChange={setClassLocation} />
-            </div>
+          <div
+            id="class-input-form-container"
+            className="flex flex-row items-center justify-center gap-4 mb-6 w-200"
+          >
+            <InputField
+              text="Class ID"
+              placeholder="Enter the class ID"
+              value={classId}
+              example="e.g., 3305"
+              name="eventName"
+              onChange={setClassId}
+            />
+            <InputField
+              text="Name"
+              placeholder="Enter the class name"
+              value={className}
+              example="e.g., Data Structures"
+              name="eventName"
+              onChange={setClassName}
+            />
+            <InputField
+              text="Type"
+              placeholder="Enter the class type"
+              value={classType}
+              example="e.g., CS"
+              name="eventName"
+              onChange={setClassType}
+            />
+            <InputField
+              text="Location"
+              placeholder="Enter the class location"
+              value={classLocation}
+              example="e.g., Online"
+              name="eventName"
+              onChange={setClassLocation}
+            />
+          </div>
 
-            <HoverButton text="Add Class" onClick={handleAddWantedClassEvent} />
+          <HoverButton text="Add Class" onClick={handleAddWantedClassEvent} />
+          {warningMessage && (
+           <p className="text-red-400 mt-2">
+            {warningMessage}
+          </p>
+          )}
+
         </div>
 
         {/* Available classes based on your schedule and wanted classes selection */}
-        <div id="available-classes-selection-container" className="flex flex-col items-center justify-center m-4 mt-0 mb-4">
-            <h1 className="text-2xl font-bold mb-4 mt-30 text-white">Available classes based on your schedule</h1>
-            <div id="classes-container" className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto">
-              {availableClasses.length === 0 ? (
-                <p className="text-gray-500 mx-80 my-10">No classes available</p>
-              ) : (
-                availableClasses.map((dt, idx) => (
-                <div key={idx} className="flex items-center w-full">
-                  {/* Create component available classes and call it here*/}
-                </div>
-              )))}
-            </div>
+        <div
+          id="available-classes-selection-container"
+          className="flex flex-col items-center justify-center m-4 mt-0 mb-4"
+        >
+          <h1 className="text-2xl font-bold mb-4 mt-30 text-white">
+            Available classes based on your schedule
+          </h1>
+          <div
+            id="classes-container"
+            className="rounded-lg shadow-lg p-4 m-4 mt-20 border border-gray-300 overflow-auto min-w-[600px]"
+          >
+            {generatedSchedules.length === 0 ||
+            generatedSchedules[0].length === 0 ? (
+              <p className="text-gray-500 mx-80 my-10">
+                No classes available. Click "Refresh List" to generate a
+                schedule.
+              </p>
+            ) : (
+              generatedSchedules[0].map((cls, idx) => {
+                const hasConflict = eventTimeslots.some((evSlot) =>
+                  timeslotsOverlap(
+                    {
+                      day: cls.timeslot.day,
+                      start: cls.timeslot.start,
+                      end: cls.timeslot.end,
+                    },
+                    evSlot
+                  )
+                );
 
-            <HoverButton text="Refresh List" onClick={refreshAvailableClasses} />
+                return(
+                <div
+                  key={idx}
+                  className="flex flex-col w-full border-b border-gray-700 py-3 text-white"
+                >
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{cls.code}</span>
+                    {cls.professor.name && (
+                      <span>
+                        {cls.professor.name}{" "}
+                        {cls.professor.avg_rating !== null && (
+                          <span className="text-sm text-gray-300">
+                            — {cls.professor.avg_rating.toFixed(1)}/5
+                            {cls.professor.avg_difficulty !== null &&
+                              ` difficulty ${cls.professor.avg_difficulty.toFixed(
+                                1
+                              )}`}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    {cls.timeslot.day} {cls.timeslot.start}–{cls.timeslot.end} @{" "}
+                    {cls.timeslot.location}
+                  </div>
+                    {hasConflict && (
+                      <div className="text-sm text-red-400 mt-1">
+                        Schedule Conflict
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <HoverButton text="Refresh List" onClick={refreshAvailableClasses} />
         </div>
-      
-
       </div>
       {/* end main padding wrapper */}
-      
 
-      <Footer/>
+      {/* Debug output: schedules returned from backend (for development; remove later if you want) */}
+      <pre className="text-xs text-white bg-gray-900 p-2 mt-4 rounded max-h-64 overflow-auto">
+        {JSON.stringify(generatedSchedules, null, 2)}
+      </pre>
+
+      <Footer />
     </main>
   );
 }
