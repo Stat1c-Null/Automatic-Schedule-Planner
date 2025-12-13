@@ -20,7 +20,18 @@ export default function TutorialPage() {
                     <span className="text-3xl w-full mb-6">How to use</span>
                     <br></br>
                     <span className="text-xl w-full">First, enter all "Events". This will be all other activities such as work or clubs that interfere with scheduling.</span>
+                    <div className="relative h-40 w-full">
+                        <Image
+                            src="/assets/addevent.png"
+                            alt="single time event"
+                            fill
+                            className="object-contain rounded-xl"
+                            sizes="100vw"
+                        />
+                    </div>
 
+
+                    <span className="text-xl w-full">To add events on multiple days or times, press the "+" button.</span>
 
                 </div>
 
