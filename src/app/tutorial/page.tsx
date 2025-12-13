@@ -29,9 +29,57 @@ export default function TutorialPage() {
                             sizes="100vw"
                         />
                     </div>
+                    <div className="relative h-40 w-full">
+                        <Image
+                            src="/assets/addedevent.png"
+                            alt="add event result"
+                            fill
+                            className="object-contain rounded-xl"
+                            sizes="100vw"
+                        />
+                    </div>
 
 
                     <span className="text-xl w-full">To add events on multiple days or times, press the "+" button.</span>
+                    <div className="relative h-40 w-full">
+                        <Image
+                            src="/assets/multipledays.png"
+                            alt="multi time event"
+                            fill
+                            className="object-contain rounded-xl"
+                            sizes="100vw"
+                        />
+                    </div>
+                    <div className="relative h-40 w-full">
+                        <Image
+                            src="/assets/addedmultidayevent.png"
+                            alt="add multi time event result"
+                            fill
+                            className="object-contain rounded-xl"
+                            sizes="100vw"
+                        />
+                    </div>
+
+                    <span className="text-xl w-full">Next, add the classes you need to take and press the "Add Class" and "Refresh" button.</span>
+                    <div className="relative h-40 w-full">
+                        <Image
+                            src="/assets/addclass.png"
+                            alt="add class"
+                            fill
+                            className="object-contain rounded-xl"
+                            sizes="100vw"
+                        />
+                    </div>
+
+                    <div className="relative h-40 w-full">
+                        <Image
+                            src="/assets/addclassresult.png"
+                            alt="add class result"
+                            fill
+                            className="object-contain rounded-xl"
+                            sizes="100vw"
+                        />
+                    </div>
 
                 </div>
 
