@@ -19,7 +19,7 @@ export default function NavBar(
         <div className="flex items-center px-4 gap-4 z-[9999] shadow-md">
           <Link href="/"><HoverButton text="Home"/></Link>
           <Link href="/schedule"><HoverButton text="Schedule"/></Link>
-          <Link href="/"><HoverButton text="Tutorial"/></Link>
+          <Link href="/tutorial"><HoverButton text="Tutorial"/></Link>
         </div>
         
     </div>

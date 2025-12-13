@@ -11,22 +11,11 @@ export default function HomePageHeader({
     <div className="relative flex flex-col gap-2">
 
     {/*creates background for content, welcome message*/}  
-    <div className="margins colors">
-      <h2 className="text-6xl" >Schedule in minutes</h2>
+    <div className="margins colors pt-5">
+      <h2 className="text-5xl" >Create your schedule in minutes</h2>
       <br></br>
-      <p className="text-3xl">Create your schedules in minutes instead of hours using our tool.</p>
-
+      <p className="text-3xl">Create your optimal schedule in minutes instead of hours using our tool.</p>
     </div>
-    
-    <br></br>
-
-    {/*About section*/}
-    <div className="margins colors">
-
-    </div>
-
-
-
 
     </div>
   );
