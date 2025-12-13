@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import HoverButton from "@/components/HoverButton";
 import NavBar from "@/components/NavBar";
 import InputField from "@/components/InputField";
@@ -12,6 +12,8 @@ import Footer from "@/components/Footer";
 import type { ScheduleResponse } from "@/lib/scheduler";
 
 export default function SchedulePage() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     document.title = "Schedule";
   }, []);
@@ -345,6 +347,73 @@ function handleAddWantedClassEvent() {
     setWantedClasses((wc) => wc.filter((_, i) => i !== index));
   }
 
+  // Handle CSV file upload and parse classes
+  function handleUploadClasses() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (!text) return;
+
+      // Parse CSV: skip header, split by newlines
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      // Skip header row (assuming first row is headers)
+      const dataLines = lines.slice(1);
+      
+      const newClasses: Array<{ id: number; className: string; type: string; location: string }> = [];
+
+      for (const line of dataLines) {
+        // Split by comma, handling quoted values
+        const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        
+        if (values.length >= 4) {
+          const [className, classId, classType, classLocation] = values;
+          
+          // Validate and parse
+          const id = parseInt(classId, 10);
+          if (isNaN(id)) continue;
+
+          // Check if already exists
+          const exists = wantedClasses.some(
+            c => c.id === id && c.type.toUpperCase() === classType.toUpperCase()
+          );
+          
+          if (!exists) {
+            newClasses.push({
+              id,
+              className: className.trim(),
+              type: classType.trim().toUpperCase(),
+              location: classLocation.trim() || 'TBD',
+            });
+          }
+        }
+      }
+
+      if (newClasses.length > 0) {
+        setWantedClasses(prev => [...prev, ...newClasses]);
+        setWarningMessage(null);
+      } else {
+        setWarningMessage('No valid classes found in the CSV file.');
+      }
+    };
+
+    reader.onerror = () => {
+      setWarningMessage('Error reading file. Please try again.');
+    };
+
+    reader.readAsText(file);
+    
+    // Reset input so same file can be uploaded again
+    event.target.value = '';
+  }
+
 
   return (
     <main className="bg-black">
@@ -549,6 +618,15 @@ function handleAddWantedClassEvent() {
           </div>
 
           <HoverButton text="Add Class" onClick={handleAddWantedClassEvent} />
+          <div className="m-5"></div>
+          <HoverButton text="Upload List" onClick={handleUploadClasses} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleFileChange}
+            className="hidden"
+          />
           {warningMessage && (
            <p className="text-red-400 mt-2">
             {warningMessage}
@@ -630,10 +708,10 @@ function handleAddWantedClassEvent() {
       </div>
       {/* end main padding wrapper */}
 
-      {/* Debug output: schedules returned from backend (for development; remove later if you want) */}
+      {/* Debug output: schedules returned from backend (for development; remove later if you want) 
       <pre className="text-xs text-white bg-gray-900 p-2 mt-4 rounded max-h-64 overflow-auto">
         {JSON.stringify(generatedSchedules, null, 2)}
-      </pre>
+      </pre>*/}
 
       <Footer />
     </main>
