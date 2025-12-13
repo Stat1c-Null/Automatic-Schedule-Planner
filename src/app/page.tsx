@@ -2,8 +2,9 @@
 import React from "react";
 import { useEffect } from "react";
 import NavBar from "@/components/NavBar";
-import HomePageContent from "@/components/HomePageContent";
+import HomePageContent from "@/components/homepage/HomePageContent";
 import Footer from "@/components/Footer";
+import HomePageHeader from "@/components/homepage/HomePageHeader";
 
 export default function HomePage() {
   useEffect(() => {
