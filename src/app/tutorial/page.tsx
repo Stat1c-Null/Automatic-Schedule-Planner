@@ -27,6 +27,7 @@ export default function TutorialPage() {
                             fill
                             className="object-contain rounded-xl"
                             sizes="100vw"
+                            unoptimized
                         />
                     </div>
                     <div className="relative h-40 w-full">
@@ -36,6 +37,7 @@ export default function TutorialPage() {
                             fill
                             className="object-contain rounded-xl"
                             sizes="100vw"
+                            unoptimized
                         />
                     </div>
 
@@ -48,6 +50,7 @@ export default function TutorialPage() {
                             fill
                             className="object-contain rounded-xl"
                             sizes="100vw"
+                            unoptimized
                         />
                     </div>
                     <div className="relative h-40 w-full">
@@ -57,6 +60,7 @@ export default function TutorialPage() {
                             fill
                             className="object-contain rounded-xl"
                             sizes="100vw"
+                            unoptimized
                         />
                     </div>
 
@@ -68,6 +72,7 @@ export default function TutorialPage() {
                             fill
                             className="object-contain rounded-xl"
                             sizes="100vw"
+                            unoptimized
                         />
                     </div>
 
@@ -78,6 +83,7 @@ export default function TutorialPage() {
                             fill
                             className="object-contain rounded-xl"
                             sizes="100vw"
+                            unoptimized
                         />
                     </div>
 
