@@ -13,6 +13,9 @@ export default function TutorialPage() {
         <main className='bg-black'>
             <NavBar/>
 
+            <div className="">
+                
+            </div>
 
 
             <Footer/>

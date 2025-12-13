@@ -40,8 +40,9 @@ export default function HomePageContent({
 
         {/*getting started*/}
         <div className="flex flex-wrap gap-2 margins colors p-5">
-            <span className="block text-3xl font-semibold">Getting Started</span>
+            <span className="w-full block text-3xl font-semibold">Getting Started</span>
             <div className="flex flex-wrap gap-2">
+                <span className="w-full">To get started, select "Schedule". To learn how to use, select "Tutorial".</span>
                 <Link href="/schedule"><HoverButton text="Schedule"/></Link>
                 <Link href="/tutorial"><HoverButton text="Tutorial"/></Link>
 
