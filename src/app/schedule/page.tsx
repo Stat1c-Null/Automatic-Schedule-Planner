@@ -16,7 +16,7 @@ export default function SchedulePage() {
     document.title = "Schedule";
   }, []);
 
-  // LOAD COURSE CATALOG FROM BACKEND ONCE
+// Load available course codes from backend API on component mount
 useEffect(() => {
   async function loadCourses() {
     try {
@@ -202,10 +202,7 @@ const [coursesLoaded, setCoursesLoaded] = useState(false);
     setDateTimes([{ day: "", time: "" }]);
   }
 
-
-
-  //OTHER VERSION TOOK USER INPUT AND CREATED AN OBJECT WITHOUT VALIDATION
-  //THIS VERSION ENSURES THE CLASS EXISTS IN API
+// Add wanted class to the list
 function handleAddWantedClassEvent() {
   setWarningMessage(null);
 
@@ -343,7 +340,10 @@ function handleAddWantedClassEvent() {
     start: hoursToTimeString(ev.start),
     end: hoursToTimeString(ev.end),
   }));
-  //
+  
+  function handleDeleteWantedClass(index: number) {
+    setWantedClasses((wc) => wc.filter((_, i) => i !== index));
+  }
 
 
   return (
@@ -504,6 +504,7 @@ function handleAddWantedClassEvent() {
                     location={dt.location}
                     onClick={() => console.log("Clicked!")}
                   />
+                  <HoverButton text="Remove" onClick={() => handleDeleteWantedClass(idx)} />
                 </div>
               ))
             )}
@@ -513,6 +514,14 @@ function handleAddWantedClassEvent() {
             id="class-input-form-container"
             className="flex flex-row items-center justify-center gap-4 mb-6 w-200"
           >
+            <InputField
+              text="Type"
+              placeholder="Enter the class type"
+              value={classType}
+              example="e.g., CS"
+              name="eventName"
+              onChange={setClassType}
+            />
             <InputField
               text="Class ID"
               placeholder="Enter the class ID"
@@ -528,14 +537,6 @@ function handleAddWantedClassEvent() {
               example="e.g., Data Structures"
               name="eventName"
               onChange={setClassName}
-            />
-            <InputField
-              text="Type"
-              placeholder="Enter the class type"
-              value={classType}
-              example="e.g., CS"
-              name="eventName"
-              onChange={setClassType}
             />
             <InputField
               text="Location"
