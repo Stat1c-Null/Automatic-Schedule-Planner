@@ -22,7 +22,7 @@ export default function TutorialPage() {
                     <span className="text-xl w-full">First, enter all "Events". This will be all other activities such as work or clubs that interfere with scheduling.</span>
                     <div className="relative h-40 w-full">
                         <Image
-                            src="./assets/addevent.png"
+                            src="/assets/addevent.png"
                             alt="single time event"
                             fill
                             className="object-contain rounded-xl"
@@ -32,7 +32,7 @@ export default function TutorialPage() {
                     </div>
                     <div className="relative h-40 w-full">
                         <Image
-                            src="./assets/addedevent.png"
+                            src="/assets/addedevent.png"
                             alt="add event result"
                             fill
                             className="object-contain rounded-xl"
@@ -45,7 +45,7 @@ export default function TutorialPage() {
                     <span className="text-xl w-full">To add events on multiple days or times, press the "+" button.</span>
                     <div className="relative h-40 w-full">
                         <Image
-                            src="./assets/multipledays.png"
+                            src="/assets/multipledays.png"
                             alt="multi time event"
                             fill
                             className="object-contain rounded-xl"
@@ -55,7 +55,7 @@ export default function TutorialPage() {
                     </div>
                     <div className="relative h-40 w-full">
                         <Image
-                            src="./assets/addedmultidayevent.png"
+                            src="/assets/addedmultidayevent.png"
                             alt="add multi time event result"
                             fill
                             className="object-contain rounded-xl"
@@ -67,7 +67,7 @@ export default function TutorialPage() {
                     <span className="text-xl w-full">Next, add the classes you need to take and press the "Add Class" and "Refresh" button.</span>
                     <div className="relative h-40 w-full">
                         <Image
-                            src="./assets/addclass.png"
+                            src="/assets/addclass.png"
                             alt="add class"
                             fill
                             className="object-contain rounded-xl"
@@ -78,7 +78,7 @@ export default function TutorialPage() {
 
                     <div className="relative h-40 w-full">
                         <Image
-                            src="./assets/addclassresult.png"
+                            src="/assets/addclassresult.png"
                             alt="add class result"
                             fill
                             className="object-contain rounded-xl"
